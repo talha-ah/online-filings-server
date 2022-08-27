@@ -1,0 +1,36 @@
+const { parseError } = require("../utils/helpers")
+const { CustomResponse } = require("../utils/customResponse")
+
+// Possible error names
+const errorNames = [
+  "CastError",
+  "MongoError",
+  "SyntaxError",
+  "ValidationError",
+  "JsonWebTokenError",
+]
+
+module.exports = (app) => {
+  app.use("*", (req, res) => {
+    res.status(400).send(CustomResponse("Invalid request", null, false))
+  })
+
+  app.use((error, req, res, next) => {
+    const { name, message, status } = parseError(error)
+
+    if (name == "CustomError") {
+      res.status(error.status).send(CustomResponse(message, null, false))
+    } else if (name == "MongoError" && status == 11000) {
+      const field = Object.entries(keyValue)[0][0] // Catch duplicate key field error
+      res
+        .status(400)
+        .send(CustomResponse(`${field} already exists`, null, false))
+    } else if (errorNames.includes(name)) {
+      res.status(400).send(CustomResponse(message, null, false))
+    } else {
+      res.status(500).send(CustomResponse(message, null, false))
+    }
+  })
+
+  return app
+}

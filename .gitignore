@@ -1,0 +1,9 @@
+node_modules
+nodemon.json
+uploads/*.png
+uploads/*.jpg
+uploads/*.jpeg
+package-lock.json
+*.lock
+*.log
+.env
