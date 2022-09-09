@@ -4,53 +4,53 @@ const { CustomResponse } = require("../../../utils/customResponse")
 const Service = require("../services")
 const Validations = require("../validations")
 
-module.exports.getAll = async (req, res) => {
-  const data = await Validations.getAll({
+module.exports.getTasks = async (req, res) => {
+  const data = await Validations.getTasks({
     ...req.query,
   })
 
-  const response = await Service.getAll(data)
+  const response = await Service.getTasks(data)
 
   res.status(200).json(CustomResponse(texts.tasks, response))
 }
 
-module.exports.getOne = async (req, res) => {
-  const data = await Validations.getOne({
-    ...req.params,
-  })
-
-  const response = await Service.getOne(data)
-
-  res.status(200).json(CustomResponse(texts.tasks, response))
-}
-
-module.exports.createOne = async (req, res) => {
-  const data = await Validations.createOne({
+module.exports.getTask = async (req, res) => {
+  const data = await Validations.getTask({
     ...req.body,
   })
 
-  const response = await Service.createOne(data)
+  const response = await Service.getTask(data)
 
   res.status(200).json(CustomResponse(texts.tasks, response))
 }
 
-module.exports.updateOne = async (req, res) => {
-  const data = await Validations.updateOne({
+module.exports.createTask = async (req, res) => {
+  const data = await Validations.createTask({
+    ...req.params,
+  })
+
+  const response = await Service.createTask(data)
+
+  res.status(200).json(CustomResponse(texts.tasks, response))
+}
+
+module.exports.updateTask = async (req, res) => {
+  const data = await Validations.updateTask({
     ...req.params,
     ...req.body,
   })
 
-  const response = await Service.updateOne(data)
+  const response = await Service.updateTask(data)
 
   res.status(200).json(CustomResponse(texts.tasks, response))
 }
 
-module.exports.deleteOne = async (req, res) => {
-  const data = await Validations.getOne({
+module.exports.deleteTask = async (req, res) => {
+  const data = await Validations.getTask({
     ...req.params,
   })
 
-  const response = await Service.deleteOne(data)
+  const response = await Service.deleteTask(data)
 
   res.status(200).json(CustomResponse(texts.tasks, response))
 }

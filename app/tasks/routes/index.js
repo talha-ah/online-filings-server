@@ -4,10 +4,10 @@ const controller = require("../controllers")
 
 router.put("/status/:id", controller.updateStatus)
 
-router.get("/", controller.getAll)
-router.post("/", controller.createOne)
-router.get("/:id", controller.getOne)
-router.put("/:id", controller.updateOne)
-router.delete("/:id", controller.deleteOne)
+router.get("/", controller.getTasks)
+router.get("/:id", controller.getTask)
+router.post("/", controller.createTask)
+router.put("/:id", controller.updateTask)
+router.delete("/:id", controller.deleteTask)
 
 module.exports = router

@@ -19,7 +19,7 @@ module.exports.errors = {
   taskStatusRequired: "Task status is required",
   taskDueDateRequired: "Task due date is required",
   taskIdLength: "Task id length must be 24 characters",
-  taskStatusInvalid: "Task status is invalid (to-do, done)",
+  taskStatusInvalid: "Task status is invalid (pending, done)",
 
   taskSortTypeInvalid: "Task sort type is invalid (startAt, dueAt, doneAt)",
 

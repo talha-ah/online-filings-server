@@ -4,53 +4,53 @@ const { CustomResponse } = require("../../../utils/customResponse")
 const Service = require("../services")
 const Validations = require("../validations")
 
-module.exports.getAll = async (req, res) => {
-  const data = await Validations.getAll({
+module.exports.getProjects = async (req, res) => {
+  const data = await Validations.getProjects({
     ...req.query,
   })
 
-  const response = await Service.getAll(data)
+  const response = await Service.getProjects(data)
 
   res.status(200).json(CustomResponse(texts.projects, response))
 }
 
-module.exports.getOne = async (req, res) => {
-  const data = await Validations.getOne({
+module.exports.getProject = async (req, res) => {
+  const data = await Validations.getProject({
     ...req.params,
   })
 
-  const response = await Service.getOne(data)
+  const response = await Service.getProject(data)
 
   res.status(200).json(CustomResponse(texts.projects, response))
 }
 
-module.exports.createOne = async (req, res) => {
-  const data = await Validations.createOne({
+module.exports.createProject = async (req, res) => {
+  const data = await Validations.createProject({
     ...req.body,
   })
 
-  const response = await Service.createOne(data)
+  const response = await Service.createProject(data)
 
   res.status(200).json(CustomResponse(texts.projects, response))
 }
 
-module.exports.updateOne = async (req, res) => {
-  const data = await Validations.updateOne({
+module.exports.updateProject = async (req, res) => {
+  const data = await Validations.updateProject({
     ...req.params,
     ...req.body,
   })
 
-  const response = await Service.updateOne(data)
+  const response = await Service.updateProject(data)
 
   res.status(200).json(CustomResponse(texts.projects, response))
 }
 
-module.exports.deleteOne = async (req, res) => {
-  const data = await Validations.getOne({
+module.exports.deleteProject = async (req, res) => {
+  const data = await Validations.getProject({
     ...req.params,
   })
 
-  const response = await Service.deleteOne(data)
+  const response = await Service.deleteProject(data)
 
   res.status(200).json(CustomResponse(texts.projects, response))
 }

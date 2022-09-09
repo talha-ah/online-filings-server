@@ -1,11 +1,12 @@
 const ENV = process.env
-const ObjectId = require("mongodb").ObjectID
+const ObjectId = require("mongodb").ObjectId
 
-const { getDB } = require("../../../config/db")
 const { errors } = require("../../../utils/texts")
 const { CustomError } = require("../../../utils/customError")
 
-const COLLECTION = "tasks"
+const Model = require("../models")
+const ProjectModel = require("../../projects/models")
+const ProjectService = require("../../projects/services")
 
 /**
  * Get all the documents
@@ -13,20 +14,20 @@ const COLLECTION = "tasks"
  * @param {object} data - function payload
  * @param {string} data.page - page number
  * @param {string} data.limit - limit per page
- * @param {string} data.status - (filters) status of the task (to-do, done)
+ * @param {string} data.status - (filters) status of the task (pending, done)
  * @param {string} data.search - (filters) search query string
  * @param {string} data.sort - (filters) asc or desc
  * @param {string} data.sortType - (filters) startAt, dueAt
- * @returns {object} - project
+ * @returns {object} - Task
  */
-module.exports.getAll = async (data) => {
+module.exports.getTasks = async (data) => {
   const page = +data.page || 1
   const limit = +data.limit || +ENV.LIMIT
 
   // DB query
   const query = {
     name: {
-      $regex: ".*" + data.search || "" + ".*",
+      $regex: `.*${data.search || ""}.*`,
       $options: "i",
     },
   }
@@ -37,18 +38,97 @@ module.exports.getAll = async (data) => {
     [data.sortType || "startAt"]: data.sort === "desc" ? -1 : 1, // sort by desc or asc
   }
 
-  // Get the DB connection
-  const DB = getDB().collection(COLLECTION)
-
   // Get the documents
-  const response = await DB.find(query)
-    .sort(sort)
-    .skip(limit * (page - 1))
-    .limit(limit)
-    .toArray()
+  let response = []
+  let totalData = 0
 
-  // Get the total count
-  const totalData = await DB.find(query).count()
+  if (data.projectId) {
+    response = await ProjectModel.aggregate([
+      {
+        $match: {
+          _id: ObjectId(data.projectId),
+        },
+      },
+      {
+        $lookup: {
+          from: "tasks",
+          localField: "tasks",
+          foreignField: "_id",
+          as: "tasks",
+          pipeline: [
+            {
+              $match: query,
+            },
+            {
+              $sort: sort,
+            },
+            {
+              $skip: (page - 1) * limit,
+            },
+            {
+              $limit: limit,
+            },
+          ],
+        },
+      },
+      {
+        $unwind: {
+          path: "$tasks",
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: "$tasks",
+        },
+      },
+    ])
+
+    totalData = await ProjectModel.aggregate([
+      {
+        $match: {
+          _id: ObjectId(data.projectId),
+        },
+      },
+      {
+        $lookup: {
+          from: "tasks",
+          localField: "tasks",
+          foreignField: "_id",
+          as: "tasks",
+          pipeline: [
+            {
+              $match: query,
+            },
+          ],
+        },
+      },
+      {
+        $unwind: {
+          path: "$tasks",
+        },
+      },
+      {
+        $replaceRoot: {
+          newRoot: "$tasks",
+        },
+      },
+      {
+        $count: "total",
+      },
+    ])
+
+    // Get the total count
+    totalData = totalData.length ? totalData[0].total : 0
+  } else {
+    response = await Model.find(query)
+      .sort(sort)
+      .skip(limit * (page - 1))
+      .limit(limit)
+      .lean()
+
+    // Get the total count
+    totalData = await Model.find(query).countDocuments()
+  }
 
   // Return the documents
   return {
@@ -67,14 +147,11 @@ module.exports.getAll = async (data) => {
  * @param {string} data.id - id of the task
  * @returns {object} - task
  */
-module.exports.getOne = async (data) => {
-  // Get the DB connection
-  const DB = getDB().collection(COLLECTION)
-
+module.exports.getTask = async (data) => {
   // Get the document
-  const response = await DB.findOne({
+  const response = await Model.findOne({
     _id: ObjectId(data.id),
-  })
+  }).lean()
 
   // Check for errors
   if (!response) throw new CustomError(errors.taskNotFound, 400)
@@ -90,23 +167,18 @@ module.exports.getOne = async (data) => {
  * @param {string} data.dueAt - dueAt of the task
  * @returns {object} - inserted task
  */
-module.exports.createOne = async (data) => {
-  // Get the DB connection
-  const DB = getDB().collection(COLLECTION)
-
-  // Set default values
-  data.status = "to-do"
-  data.startAt = new Date()
-
+module.exports.createTask = async (data) => {
   // Insert the document
-  let response = await DB.insertOne(data)
+  let response = await Model.insertOne(data)
 
   // Check for errors
-  if (!response || !response.insertedId)
-    throw new CustomError(errors.error, 400)
+  if (!response) throw new CustomError(errors.error, 400)
 
-  // Get the inserted document
-  response = await this.getOne({ id: response.insertedId })
+  // Add the task to the project
+  await ProjectService.addTask({
+    id: data.projectId,
+    taskId: response._id,
+  })
 
   // Return the inserted document
   return response
@@ -121,29 +193,22 @@ module.exports.createOne = async (data) => {
  * @param {string} data.dueAt - dueAt of the task
  * @returns {object} - updated task
  */
-module.exports.updateOne = async (data) => {
-  // Get the DB connection
-  const DB = getDB().collection(COLLECTION)
-
-  // Separate the id from the data otherise the id will also be added document
-  const { id, ...body } = data
-
+module.exports.updateTask = async (data) => {
   // Update the document
-  let response = await DB.findOneAndUpdate(
+  let response = await Model.findOneAndUpdate(
     {
-      _id: ObjectId(id),
+      _id: ObjectId(data.id),
     },
     {
       $set: body,
+    },
+    {
+      new: true,
     }
-  )
+  ).lean()
 
   // Check for errors
-  if (!response || response.lastErrorObject.n === 0)
-    throw new CustomError(errors.taskNotFound, 400)
-
-  // Get the updated document
-  response = await this.getOne(data)
+  if (!response) throw new CustomError(errors.taskNotFound, 400)
 
   // Return the updated document
   return response
@@ -156,22 +221,16 @@ module.exports.updateOne = async (data) => {
  * @param {string} data.id - id of the task
  * @returns {object} - deleted task
  */
-module.exports.deleteOne = async (data) => {
-  // Get the DB connection
-  const DB = getDB().collection(COLLECTION)
-
-  // Get the document to delete
-  const response = await this.getOne(data)
-
+module.exports.deleteTask = async (data) => {
   // Delete the document
-  const check = await DB.deleteOne({
+  const response = await Model.findOneAndDelete({
     _id: ObjectId(data.id),
-  })
+  }).lean()
 
-  // Check for errors
-  if (!check || check.deletedCount === 0)
-    throw new CustomError(errors.taskNotFound, 400)
+  // check for errors
+  if (!response) throw new CustomError(errors.taskNotFound, 400)
 
+  // return the deleted document
   return response
 }
 
@@ -184,9 +243,6 @@ module.exports.deleteOne = async (data) => {
  * @returns {object} - updated task
  */
 module.exports.updateStatus = async (data) => {
-  // Get the DB connection
-  const DB = getDB().collection(COLLECTION)
-
   // Update the doneAt field
   if (data.status === "done") {
     data.doneAt = new Date()
@@ -196,7 +252,7 @@ module.exports.updateStatus = async (data) => {
   }
 
   // Update the document
-  let response = await DB.findOneAndUpdate(
+  let response = await Model.findOneAndUpdate(
     {
       _id: ObjectId(data.id),
     },
@@ -205,15 +261,14 @@ module.exports.updateStatus = async (data) => {
         status: data.status,
         doneAt: data.doneAt,
       },
+    },
+    {
+      new: true,
     }
-  )
+  ).lean()
 
   // Check for errors
-  if (!response || response.lastErrorObject.n === 0)
-    throw new CustomError(errors.taskNotFound, 400)
-
-  // Get the updated document
-  response = await this.getOne(data)
+  if (!response) throw new CustomError(errors.taskNotFound, 400)
 
   // Return the updated document
   return response

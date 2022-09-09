@@ -1,24 +1,37 @@
-const ObjectId = require("mongodb").ObjectID
+const mongoose = require("mongoose")
+const Schema = mongoose.Schema
 
-const model = {
-  name: {
-    type: String,
-    required: true,
-  },
-  startAt: {
-    type: Date,
-    default: new Date(),
-  },
-  dueAt: {
-    type: Date,
-    default: new Date(),
-  },
-  tasks: [
-    {
-      ref: "tasks",
-      type: ObjectId,
+const model = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
     },
-  ],
-}
+    dueAt: {
+      type: Date,
+      default: new Date(),
+      required: true,
+    },
+    startAt: {
+      type: Date,
+      default: new Date(),
+    },
+    doneAt: {
+      type: Date,
+    },
+    tasks: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Task",
+      },
+    ],
+    status: {
+      type: String,
+      default: "pending",
+      enum: ["pending", "completed"],
+    },
+  },
+  { versionKey: false, timestamps: true }
+)
 
-module.exports = model
+module.exports = mongoose.model("project", model)

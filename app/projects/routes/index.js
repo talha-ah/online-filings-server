@@ -2,12 +2,10 @@ const router = require("express").Router()
 
 const controller = require("../controllers")
 
-router.post("/task", controller.addOrMoveTask)
-
-router.get("/", controller.getAll)
-router.post("/", controller.createOne)
-router.get("/:id", controller.getOne)
-router.put("/:id", controller.updateOne)
-router.delete("/:id", controller.deleteOne)
+router.get("/", controller.getProjects)
+router.get("/:id", controller.getProject)
+router.post("/", controller.createProject)
+router.put("/:id", controller.updateProject)
+router.delete("/:id", controller.deleteProject)
 
 module.exports = router

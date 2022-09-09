@@ -26,7 +26,7 @@ const project = {
 }
 
 const validations = {
-  getAll: (data) => {
+  getProjects: (data) => {
     const Validation = Joi.object().keys({
       search: Joi.string().allow("").optional().messages({
         "string.base": errors.typeString,
@@ -47,21 +47,29 @@ const validations = {
 
     return joiError(Validation.validate(data))
   },
-  getOne: (data) => {
+  getProject: (data) => {
     const Validation = Joi.object().keys({
       ...id,
     })
 
     return joiError(Validation.validate(data))
   },
-  createOne: (data) => {
+  createProject: (data) => {
     const Validation = Joi.object().keys({
       ...project,
     })
 
     return joiError(Validation.validate(data))
   },
-  updateOne: (data) => {
+  updateProject: (data) => {
+    const Validation = Joi.object().keys({
+      ...id,
+      ...project,
+    })
+
+    return joiError(Validation.validate(data))
+  },
+  deleteProject: (data) => {
     const Validation = Joi.object().keys({
       ...id,
       ...project,

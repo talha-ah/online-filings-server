@@ -9,7 +9,7 @@ dotenv.config({ path: ".env" })
 const app = express()
 
 // Imports
-const { connectDB } = require("./config/db")
+const connectDB = require("./config/db")
 
 // Pre-route middlewares
 require("./middlewares/pre-route")(app)
