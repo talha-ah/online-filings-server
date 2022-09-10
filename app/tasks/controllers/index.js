@@ -26,7 +26,7 @@ module.exports.getTask = async (req, res) => {
 
 module.exports.createTask = async (req, res) => {
   const data = await Validations.createTask({
-    ...req.params,
+    ...req.body,
   })
 
   const response = await Service.createTask(data)

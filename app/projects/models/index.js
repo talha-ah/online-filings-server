@@ -9,7 +9,6 @@ const model = new Schema(
     },
     dueAt: {
       type: Date,
-      default: new Date(),
       required: true,
     },
     startAt: {

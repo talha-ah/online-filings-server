@@ -40,7 +40,7 @@ const validations = {
       status: Joi.string()
         .allow("")
         .optional()
-        .valid("pending", "done")
+        .valid("pending", "completed")
         .messages({
           "string.base": errors.typeString,
           "any.only": errors.taskStatusInvalid,
@@ -90,7 +90,7 @@ const validations = {
   updateStatus: (data) => {
     const Validation = Joi.object().keys({
       ...id,
-      status: Joi.string().required().valid("pending", "done").messages({
+      status: Joi.string().required().valid("pending", "completed").messages({
         "string.base": errors.typeString,
         "any.only": errors.taskStatusInvalid,
         "string.empty": errors.taskStatusRequired,

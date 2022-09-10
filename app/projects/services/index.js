@@ -35,8 +35,6 @@ module.exports.getProjects = async (data) => {
     [data.sortType || "startAt"]: data.sort === "desc" ? -1 : 1, // sort by desc or asc
   }
 
-  console.log(query)
-
   // Get the documents
   const response = await Model.aggregate([
     { $match: query },

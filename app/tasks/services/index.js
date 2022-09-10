@@ -169,7 +169,7 @@ module.exports.getTask = async (data) => {
  */
 module.exports.createTask = async (data) => {
   // Insert the document
-  let response = await Model.insertOne(data)
+  let response = await Model.create(data)
 
   // Check for errors
   if (!response) throw new CustomError(errors.error, 400)
@@ -200,7 +200,7 @@ module.exports.updateTask = async (data) => {
       _id: ObjectId(data.id),
     },
     {
-      $set: body,
+      $set: data,
     },
     {
       new: true,
@@ -244,7 +244,7 @@ module.exports.deleteTask = async (data) => {
  */
 module.exports.updateStatus = async (data) => {
   // Update the doneAt field
-  if (data.status === "done") {
+  if (data.status === "completed") {
     data.doneAt = new Date()
   } else {
     data.startAt = new Date()

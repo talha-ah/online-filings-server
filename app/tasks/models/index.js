@@ -7,14 +7,16 @@ const model = new Schema(
       type: String,
       required: true,
     },
+    dueAt: {
+      type: Date,
+      required: true,
+    },
     startAt: {
       type: Date,
       default: new Date(),
     },
     doneAt: {
       type: Date,
-      default: new Date(),
-      required: true,
     },
     status: {
       type: String,
